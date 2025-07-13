@@ -193,58 +193,60 @@ window.showAvailableFood = showAvailableFood;
 // --- Consumer Map ---
 let consumerMap;
 function initConsumerMap() {
-  if (!consumerMap) {
-    consumerMap = L.map("consumerMap").setView([20.5937, 78.9629], 5);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap contributors"
-    }).addTo(consumerMap);
-  }
+  // Wait a bit to ensure map container is visible
+  setTimeout(() => {
+    const mapContainer = document.getElementById("consumerMap");
 
-  // Remove only donation markers, not the user's current location marker
-consumerMap.eachLayer(layer => {
-  if (layer instanceof L.Marker && !layer._icon.src.includes('blue-dot')) {
-    consumerMap.removeLayer(layer);
-  }
-});
+    if (!consumerMap) {
+      consumerMap = L.map(mapContainer).setView([20.5937, 78.9629], 5);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(consumerMap);
+    }
 
-
-  onSnapshot(query(donationsRef, where("status", "==", "approved")), snap => {
-    snap.forEach(docSnap => {
-      const d = docSnap.data();
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(d.location)}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.length > 0) {
-            const { lat, lon } = data[0];
-            L.marker([lat, lon]).addTo(consumerMap)
-              .bindPopup(`<b>${d.foodDetails}</b><br>${d.donorName}<br>${d.location}`);
-          }
-        });
+    // Clear existing markers except user location
+    consumerMap.eachLayer(layer => {
+      if (layer instanceof L.Marker && !layer.getPopup()?.getContent()?.includes("You are here")) {
+        consumerMap.removeLayer(layer);
+      }
     });
-  });
-}
-// ✅ Show consumer's current location
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(pos => {
-    const { latitude, longitude } = pos.coords;
 
-    L.marker([latitude, longitude], {
-      icon: L.icon({
-        iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32]
-      })
-    })
-    .addTo(consumerMap)
-    .bindPopup("📍 You are here")
-    .openPopup();
+    // Add donation markers
+    onSnapshot(query(donationsRef, where("status", "==", "approved")), snap => {
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(d.location)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.length > 0) {
+              const { lat, lon } = data[0];
+              L.marker([lat, lon]).addTo(consumerMap)
+                .bindPopup(`<b>${d.foodDetails}</b><br>${d.donorName}<br>${d.location}`);
+            }
+          });
+      });
+    });
 
-    consumerMap.setView([latitude, longitude], 13);
-  }, () => {
-    console.warn("Geolocation permission denied.");
-  });
-} else {
-  console.warn("Geolocation not supported.");
+    // Add user location marker
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        const userMarker = L.marker([latitude, longitude], {
+          icon: L.icon({
+            iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png",
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+          })
+        }).addTo(consumerMap)
+          .bindPopup("📍 You are here")
+          .openPopup();
+
+        consumerMap.setView([latitude, longitude], 13);
+      }, () => {
+        console.warn("Geolocation permission denied.");
+      });
+    }
+  }, 400); // slight delay ensures container is rendered
 }
 // --- Claim Logic ---
 window.claimPartial = async (id, item) => {

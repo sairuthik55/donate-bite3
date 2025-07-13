@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-analytics.js";
 import {
-  getFirestore, collection, addDoc, doc, deleteDoc, updateDoc,
+  getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, getDocs,
   onSnapshot, query, where
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import {
@@ -139,13 +139,14 @@ donorForm?.addEventListener("submit", async (e) => {
 
   async function save() {
     const data = {
-      donorName, donorContact, foodDetails, location,
-      dateCooked, expiryDate,
-      quantity: `${qty} ${unit}`,
-      status: "pending",
-      timestamp: Date.now(),
-      photo
-    };
+  donorName, donorContact, foodDetails, location,
+  dateCooked, expiryDate,
+  quantity: `${qty} ${unit}`,
+  status: "pending",
+  timestamp: Date.now(),
+  photo,
+  verified: false // 👈 NEW
+};
     console.log("Submitting donation:", data);
     try {
       await addDoc(donationsRef, data);
@@ -172,7 +173,7 @@ function showAvailableFood() {
       const li = document.createElement("li");
       li.innerHTML = `
         <strong>${d.foodDetails}</strong><br>
-        Donor: ${d.donorName} (${d.donorContact})<br>
+       Donor: ${d.donorName} ${d.verified ? '✅' : ''} (${d.donorContact})<br>
         📍 ${d.location}<br>
         🍳 ${d.dateCooked} • ⏳ ${d.expiryDate} ${expireSoon ? '<span style="color:red">⚠</span>' : ''}<br>
         ⚖ ${d.quantity}<br>
@@ -410,17 +411,29 @@ function showAdminPanel() {
       const d = docSnap.data();
       const li = document.createElement("li");
       li.innerHTML = `
-        <strong>${d.foodDetails}</strong><br>
-        Donor: ${d.donorName} (${d.donorContact})<br>
-        📍 ${d.location}<br>
-        🍳 ${d.dateCooked} • ⏳ ${d.expiryDate}<br>
-        ⚖ ${d.quantity}<br>
-<span class="status-badge ${d.status}">${d.status.toUpperCase()}</span><br>
-        ${d.photo ? `<img src="${d.photo}" style="max-width:80px">` : ""}
-        ${d.status === "pending"
-          ? `<button onclick="approveDonation('${docSnap.id}')">Approve</button>
-             <button onclick="rejectDonation('${docSnap.id}')">Reject</button>`
-          : `<button onclick="removeDonation('${docSnap.id}')">🗑 Remove</button>`}`;
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <strong>${d.foodDetails}</strong>
+      <span class="status-badge ${d.status}">${d.status.toUpperCase()}</span>
+    </div>
+    <div class="admin-card-body">
+      <p>📍 <strong>Location:</strong> ${d.location}</p>
+      <p>👤 <strong>Donor:</strong> ${d.donorName} ${d.verified ? "✅" : ""} (${d.donorContact})</p>
+      <p>🍳 <strong>Date Cooked:</strong> ${d.dateCooked} &nbsp; ⏳ <strong>Expiry:</strong> ${d.expiryDate}</p>
+      <p>⚖ <strong>Quantity:</strong> ${d.quantity}</p>
+      ${d.photo ? `<img src="${d.photo}" alt="food" class="admin-img">` : ""}
+    </div>
+    <div class="admin-card-actions">
+      ${d.status === "pending"
+        ? `<button onclick="approveDonation('${docSnap.id}')">Approve</button>
+           <button onclick="rejectDonation('${docSnap.id}')">Reject</button>`
+        : `<button onclick="removeDonation('${docSnap.id}')">🗑 Remove</button>`}
+      ${d.verified
+        ? '<span class="status-badge approved">✅ Verified</span>'
+        : `<button onclick="verifyDonor('${d.donorContact}')">✅ Verify Donor</button>`}
+    </div>
+  </div>
+`;
       (d.status === "pending" ? pend : appr).appendChild(li);
     });
   });
@@ -512,4 +525,13 @@ window.searchConsumerHistory = () => {
 window.showNGOInfo = () => {
   hideAll();
   document.getElementById("ngoSection").classList.remove("hidden");
+};
+
+window.verifyDonor = async (contact) => {
+  const q = query(donationsRef, where("donorContact", "==", contact));
+  const snap = await getDocs(q);
+  snap.forEach(docSnap => {
+    updateDoc(doc(donationsRef, docSnap.id), { verified: true });
+  });
+  alert("✅ Donor marked as verified!");
 };

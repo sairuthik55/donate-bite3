@@ -120,6 +120,22 @@ img {
 }
 
 /* ---------- Admin Panel Layout ---------- */
+.admin-block {
+  background: #f9f9f9;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.05);
+}
+.admin-block label { font-size: 1rem; }
+.admin-block textarea#thoughtInput {
+  width: 100%;
+  padding: 10px;
+  resize: vertical;
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+/* --- Admin Panel Donation Cards --- */
 .admin-card {
   background: #fff;
   border: 1px solid #eee;
@@ -166,6 +182,8 @@ img {
 .admin-card button:hover {
   background: #019170;
 }
+
+
 /* ---------- Donation Lists in Admin ---------- */
 .donation-list { list-style: none; padding: 0; }
 .donation-list li {

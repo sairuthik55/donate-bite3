@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DONATE BITE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">DONATE BITE</h1>
+    <p class="subtitle">Choose your role to proceed</p>
+
+    <!-- ✅ Role Selection -->
+    <div id="roleSelect" class="role-select clean-layout">
+      <div class="role-option" onclick="selectRole('admin')">
+        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" />
+        <span>Admin</span>
+      </div>
+      <div class="role-option" onclick="selectRole('donor')">
+        <img src="https://cdn-icons-png.flaticon.com/512/1475/1475996.png" />
+        <span>Donor</span>
+      </div>
+      <div class="role-option" onclick="selectRole('consumer')">
+        <img src="https://cdn-icons-png.flaticon.com/512/2920/2920021.png" />
+        <span>Consumer</span>
+      </div>
+      <div class="role-option" onclick="goToDashboard()">
+        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828919.png" />
+        <span>Dashboard</span>
+      </div>
+      <div class="role-option" onclick="openDonorHistory()">
+        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828961.png" />
+        <span>Donor History</span>
+      </div>
+       <div class="role-option" onclick="openConsumerHistory()">
+  <img src="https://cdn-icons-png.flaticon.com/512/2920/2920021.png" />
+  <span>Consumer History</span>
+</div>
+
+      <div class="role-option" onclick="selectRole('ngo')">
+    <img src="https://cdn-icons-png.flaticon.com/512/684/684831.png" />
+    <span>NGOs & Homes</span>
+  </div>
+</div>
+    
+
+
+    <!-- ✅ Donor Form -->
+    <form id="donorForm" class="form-card hidden">
+      <h2>Food Donation Form</h2>
+      <label for="donorName">Name</label>
+      <input id="donorName" required />
+      <label for="donorContact">Contact</label>
+      <input id="donorContact" required />
+      <label for="foodDetails">Food Details</label>
+      <textarea id="foodDetails" required></textarea>
+      <label for="location">Location</label>
+      <input id="location" required />
+      <label for="dateCooked">Date Cooked</label>
+      <input type="date" id="dateCooked" required />
+      <label for="expiryDate">Expiry Date</label>
+      <input type="date" id="expiryDate" required />
+      <label>Quantity</label>
+      <div style="display:flex;gap:10px">
+        <input type="number" id="quantity" min="0" required style="flex:1" />
+        <select id="unit" style="flex:1">
+          <option value="kg">kg</option>
+          <option value="grams">grams</option>
+          <option value="units">units</option>
+        </select>
+      </div>
+      <label for="foodPhoto">Photo (optional)</label>
+      <input type="file" id="foodPhoto" accept="image/*" />
+      <button class="submit-btn">Donate</button>
+      <button type="button" class="back-btn" onclick="goBack()">Back</button>
+    </form>
+
+    <!-- ✅ Consumer Section -->
+<section id="consumerSection" class="hidden">
+  <!-- ✅ Name Input for Consumers -->
+
+  <!-- ✅ Location Search -->
+  <input id="locationSearch" placeholder="Search by location…" oninput="showAvailableFood()" />
+  
+  <h2>Available Food Donations</h2>
+  <ul id="donationList"></ul>
+    <div id="consumerMap"></div>
+
+  <button class="back-btn" onclick="goBack()">Back</button>
+</section>
+>
+
+    <!-- ✅ Dashboard -->
+    <section id="dashboard" class="hidden dashboard-card">
+      <h2 class="dashboard-title">Dashboard</h2>
+      <div class="dashboard-grid">
+        <div class="dashboard-box">
+          <div class="box-title">Food Available</div>
+          <div id="foodAvailable" class="box-value">0</div>
+        </div>
+        <div class="dashboard-box">
+          <div class="box-title">Food Donated</div>
+          <div id="foodDonated" class="box-value">0</div>
+        </div>
+        <div class="dashboard-box">
+          <div class="box-title">Donors</div>
+          <div id="donorCount" class="box-value">0</div>
+        </div>
+        <div class="dashboard-box">
+          <div class="box-title">Consumers</div>
+          <div id="consumerCount" class="box-value">0</div>
+        </div>
+      </div>
+      <button class="back-btn" onclick="goBack()">Back</button>
+    </section>
+
+    <!-- ✅ Feedback Section -->
+    <section id="feedbackSection" class="form-card hidden">
+      <h2>💬 User Feedback</h2>
+      <ul id="feedbackList"></ul>
+    </section>
+
+    <!-- ✅ Claim Confirmation -->
+   <!-- ✅ Claim Confirmation -->
+<section id="claimConfirmSection" class="form-card hidden">
+  <h2>✅ Food Claimed!</h2>
+  <p id="claimInfo"></p>
+
+  <!-- ✅ Display or confirm consumer name -->
+  <label for="claimConsumerName">Your Name (for history tracking)</label>
+  <input type="text" id="claimConsumerName" placeholder="Enter your name" required />
+  <button class="submit-btn" onclick="saveConsumerName()">Confirm Name</button>
+
+  <button class="back-btn" onclick="goBackToConsumer()">Back to Food List</button>
+</section>
+
+   <!-- ✅ Donor History Section -->
+<section id="donorHistorySection" class="form-card hidden">
+  <h2>📜 Donor History</h2>
+  <p>Search for donations made by a specific donor.</p>
+  <input type="text" id="donorHistoryName" placeholder="Enter Donor Name…" />
+  <button class="submit-btn" onclick="searchDonorHistory()">Search</button>
+  <ul id="donorHistoryList"></ul>
+  <button class="back-btn" onclick="goBack()">Back</button>
+</section>
+
+    <!-- ✅ Consumer History Section -->
+<section id="consumerHistorySection" class="form-card hidden">
+  <h2>📜 Consumer History</h2>
+  <p>Search for food claims by a specific consumer.</p>
+  <input type="text" id="consumerHistoryName" placeholder="Enter Consumer Name…" />
+  <button class="submit-btn" onclick="searchConsumerHistory()">Search</button>
+  <ul id="consumerHistoryList"></ul>
+  <button class="back-btn" onclick="goBack()">Back</button>
+</section>
+  <!-- ✅ NGO Info Section -->
+<section id="ngoSection" class="form-card hidden">
+  <h2>🏥 NGOs & Community Homes</h2>
+  <ul id="ngoList">
+    <div class="ngo-grid">
+  <div class="ngo-card">
+    <h3>Smile Foundation</h3>
+    <p>📍 Hyderabad</p>
+    <p>📞 +91-9876543210</p>
+    <a href="tel:+919876543210" class="call-btn">📞 Call</a>
+  </div>
+
+  <div class="ngo-card">
+    <h3>Hope Old Age Home</h3>
+    <p>📍 Chennai</p>
+    <p>📞 +91-9823123456</p>
+    <a href="tel:+919823123456" class="call-btn">📞 Call</a>
+  </div>
+
+  <div class="ngo-card">
+    <h3>Anadha Ashram</h3>
+    <p>📍 Bengaluru</p>
+    <p>📞 +91-9812345678</p>
+    <a href="tel:+919812345678" class="call-btn">📞 Call</a>
+  </div>
+
+  <div class="ngo-card">
+    <h3>Helping Hands NGO</h3>
+    <p>📍 Mumbai</p>
+    <p>📞 +91-9777765432</p>
+    <a href="tel:+919777765432" class="call-btn">📞 Call</a>
+  </div>
+
+  <div class="ngo-card">
+    <h3>Maa Nivas Orphanage</h3>
+    <p>📍 Delhi</p>
+    <p>📞 +91-9845098450</p>
+    <a href="tel:+919845098450" class="call-btn">📞 Call</a>
+  </div>
+
+  <div class="ngo-card">
+    <h3>Youngistaan Foundation</h3>
+    <p>📍 Hyderabad</p>
+    <p>📞 +91-9885342224</p>
+    <a href="tel:+919885342224" class="call-btn">📞 Call</a>
+  </div>
+
+  <div class="ngo-card">
+    <h3>Vaidehi Ashram</h3>
+    <p>📍 Hyderabad</p>
+    <p>📞 +91-9032152105</p>
+    <a href="tel:+919032152105" class="call-btn">📞 Call</a>
+  </div>
+
+  <div class="ngo-card">
+    <h3>Athulya Senior Care</h3>
+    <p>📍 Hyderabad</p>
+    <p>📞 +91-9884945900</p>
+    <a href="tel:+919884945900" class="call-btn">📞 Call</a>
+  </div>
+</div>
+  <button class="back-btn" onclick="goBack()">Back</button>
+</section>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>

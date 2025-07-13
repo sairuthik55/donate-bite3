@@ -191,22 +191,19 @@ function showAvailableFood() {
 window.showAvailableFood = showAvailableFood;
 
 // --- Consumer Map ---
+let consumerMap;
 function initConsumerMap() {
-  const mapEl = document.getElementById("consumerMap");
+  // Wait a bit to ensure map container is visible
+  setTimeout(() => {
+    const mapContainer = document.getElementById("consumerMap");
 
-  // 👇 Force map to have height and visibility
-  mapEl.style.height = "400px";
-  mapEl.style.display = "block";
+    if (!consumerMap) {
+      consumerMap = L.map(mapContainer).setView([20.5937, 78.9629], 5);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(consumerMap);
+    }
 
-  if (consumerMap) {
-    consumerMap.invalidateSize(); // 👈 Refresh if already created
-    return;
-  }
-
-  consumerMap = L.map("consumerMap").setView([20.5937, 78.9629], 5);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors"
-  }).addTo(consumerMap);
     // Clear existing markers except user location
     consumerMap.eachLayer(layer => {
       if (layer instanceof L.Marker && !layer.getPopup()?.getContent()?.includes("You are here")) {
@@ -249,9 +246,8 @@ function initConsumerMap() {
         console.warn("Geolocation permission denied.");
       });
     }
-  }setTimeout(() => {
-  consumerMap.invalidateSize(); // 📌 Ensures correct rendering after visible
-}, 300);
+  }, 400); // slight delay ensures container is rendered
+}
 // --- Claim Logic ---
 window.claimPartial = async (id, item) => {
   const input = document.getElementById(`claim-${id}`);

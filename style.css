@@ -226,10 +226,11 @@ img {
 .box-title { font-size: 1rem; color: #636e72; margin-bottom: 10px; }
 .box-value { font-size: 2rem; font-weight: 600; color: #2d3436; }
 /* ---------- Map Styling ---------- */
-#map {
-  height: 300px;
+#consumerMap {
+  height: 400px;
   border-radius: 12px;
-  margin: 10px 0 20px;
+  margin-top: 30px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 /* ====== Analytics Charts & Impact Tracker ====== */
 .chart-section {
@@ -340,6 +341,32 @@ canvas {
 .status-badge.claimed {
   background-color: #00b894;
 }
+/* 🔴 Animated Red Ping for Current Location */
+.pulse-marker {
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 0, 0, 0.7);
+  border: 3px solid red;
+  border-radius: 50%;
+  position: relative;
+  animation: pulse 1.5s infinite ease-in-out;
+  box-shadow: 0 0 6px rgba(255, 0, 0, 0.6);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
 /* ✅ NGOs Section */
 .ngo-grid {
   display: grid;
@@ -400,4 +427,111 @@ canvas {
 
 .call-btn:hover {
   background: #0652dd;
+}
+#ngoSection ul li {
+  background: #f9f9f9;
+  padding: 12px;
+  border-left: 4px solid #00b894;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+.form-card {
+  max-width: 500px;
+  margin: 30px auto;
+  padding: 25px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+/* ✅ Professional NGO Donation Card Styling */
+.ngo-card {
+  background: #fff;
+  border-left: 5px solid #00b894;
+  border-radius: 12px;
+  padding: 15px 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.ngo-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2d3436;
+}
+
+.ngo-header p {
+  margin: 4px 0;
+  color: #636e72;
+}
+
+.ngo-body {
+  margin-top: 10px;
+}
+
+.ngo-donation-img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+}
+
+.ngo-actions {
+  display: flex;
+  align-items: center;    /* Align vertically */
+  gap: 5px;              /* Add space between buttons */
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.whatsapp-btn {
+  background-color: #25d366;
+  color: white;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;              /* ✅ FLEX FIX */
+  align-items:  bottom;              /* ✅ center icon/text */
+  justify-content: bottom;
+  height: 38px;                     /* ✅ Same height as claim-btn */
+  line-height: 1;
+  margin: 0;
+  box-sizing: border-box;
+  vertical-align: text-bottom;
+}
+
+
+.whatsapp-btn:hover {
+  background-color: #1ebe5d;
+}
+
+.claim-btn {
+  background-color: #0984e3;
+  color: white;
+  padding: 8px 16px;
+  font-weight: bold;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.claim-btn:hover {
+  background-color: #0652dd;
+}
+.ngo-donation-img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  margin-top: 10px;
+  border-radius: 10px;
+}
+.hidden {
+  display: none;
 }

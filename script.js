@@ -18,6 +18,7 @@ const firebaseConfig = {
   appId: "1:305748721042:web:1d17db547c1163e675154b",
   measurementId: "G-WGJXW5646V"
 };
+
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db = getFirestore(app);
@@ -57,7 +58,6 @@ const feedbackSection = document.getElementById("feedbackSection");
 const feedbackList = document.getElementById("feedbackList");
 const claimConfirmSection = document.getElementById("claimConfirmSection");
 const claimInfo = document.getElementById("claimInfo");
-
 // --- Utility Functions ---
 function hideAll() {
   donorForm?.classList.add("hidden");
@@ -74,6 +74,9 @@ function goBack() {
   hideAll();
   document.getElementById("donorHistorySection")?.classList.add("hidden");
   document.getElementById("consumerHistorySection")?.classList.add("hidden");
+   document.getElementById("ngoLoginSection")?.remove();
+  document.getElementById("ngoRegisterSection")?.remove();
+  document.getElementById("ngoDashboard")?.remove();
   roleSelect.style.display = "flex";
 }
 
@@ -104,11 +107,14 @@ function selectRole(role) {
   hideAll();
   roleSelect.style.display = "none";
   if (role === "donor") donorForm.classList.remove("hidden");
-  else if (role === "consumer") {
-    consumerSection.classList.remove("hidden");
+else if (role === "consumer") {
+  consumerSection.classList.remove("hidden");
+  roleSelect.style.display = "none";
+  setTimeout(() => {
     showAvailableFood();
-    initConsumerMap();
-  } else if (role === "admin") showAdminLogin();
+    initConsumerMap(); // ✅ Delay this
+  }, 300); // Give DOM time to layout the visible section
+} else if (role === "admin") showAdminLogin();
   else if (role === "ngo") document.getElementById("ngoSection").classList.remove("hidden");
 }
 window.selectRole = selectRole;
@@ -117,45 +123,51 @@ window.goBack = goBack;
 // --- Donor Submission ---
 donorForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const donorName = document.getElementById("donorName").value.trim();
-  const donorContact = document.getElementById("donorContact").value.trim();
-  const foodDetails = document.getElementById("foodDetails").value.trim();
-  const location = document.getElementById("location").value.trim();
-  const dateCooked = document.getElementById("dateCooked").value;
-  const expiryDate = document.getElementById("expiryDate").value;
-  const qty = document.getElementById("quantity").value.trim();
-  const unit = document.getElementById("unit").value;
-  const photoInput = document.getElementById("foodPhoto");
-  let photo = null;
-  if (photoInput.files.length) {
-    const file = photoInput.files[0];
-    const reader = new FileReader();
-    reader.onload = async () => {
-      photo = reader.result;
-      await save();
-    };
-    reader.readAsDataURL(file);
-  } else await save();
+const donorName = document.getElementById("donorName").value.trim();
+const donorPhone = document.getElementById("donorContact").value.trim(); // ✅ renamed
+const foodDetails = document.getElementById("foodDetails").value.trim();
+const location = document.getElementById("location").value.trim();
+const dateCooked = document.getElementById("dateCooked").value;
+const expiryDate = document.getElementById("expiryDate").value;
+const qty = document.getElementById("quantity").value.trim();
+const unit = document.getElementById("unit").value;
+const photoInput = document.getElementById("foodPhoto");
+let photo = null;
 
-  async function save() {
-    const data = {
-  donorName, donorContact, foodDetails, location,
-  dateCooked, expiryDate,
-  quantity: `${qty} ${unit}`,
-  status: "pending",
-  timestamp: Date.now(),
-  photo,
-  verified: false // 👈 NEW
-};
-    console.log("Submitting donation:", data);
-    try {
-      await addDoc(donationsRef, data);
-      alert("✅ Donation submitted successfully!");
-      donorForm.reset();
-    } catch (err) {
-      console.error("❌ Error submitting donation:", err);
-      alert("Error submitting donation. Check console.");
-    }
+if (photoInput.files.length) {
+  const file = photoInput.files[0];
+  const reader = new FileReader();
+  reader.onload = async () => {
+    photo = reader.result;
+    await save();
+  };
+  reader.readAsDataURL(file);
+} else await save();
+
+async function save() {
+  const data = {
+    donorName,
+    donorPhone, // ✅ fixed field
+    foodDetails,
+    location,
+    dateCooked,
+    expiryDate,
+    quantity: `${qty} ${unit}`,
+    status: "pending",
+    timestamp: Date.now(),
+    photo,
+    verified: false
+  };
+
+  console.log("Submitting donation:", data);
+  try {
+    await addDoc(donationsRef, data);
+    alert("✅ Donation submitted successfully!");
+    donorForm.reset();
+  } catch (err) {
+    console.error("❌ Error submitting donation:", err);
+    alert("Error submitting donation. Check console.");
+  }
   }
 });
 // --- Show Available Food ---
@@ -173,10 +185,11 @@ function showAvailableFood() {
       const li = document.createElement("li");
       li.innerHTML = `
         <strong>${d.foodDetails}</strong><br>
-       Donor: ${d.donorName} ${d.verified ? '✅' : ''} (${d.donorContact})<br>
+         Donor: ${d.donorName} ${d.verified ? '✅' : ''}<br>
         📍 ${d.location}<br>
         🍳 ${d.dateCooked} • ⏳ ${d.expiryDate} ${expireSoon ? '<span style="color:red">⚠</span>' : ''}<br>
         ⚖ ${d.quantity}<br>
+        📞 <strong>Phone:</strong> ${d.donorPhone ? `<a href="tel:${d.donorPhone}">${d.donorPhone}</a>` : "Not provided"}</p>
 <span class="status-badge ${d.status}">${d.status.toUpperCase()}</span><br>
         ${d.photo ? `<img src="${d.photo}" alt="Food photo">` : ""}
         <input type="number" id="claim-${id}" placeholder="Amount to claim" min="1" max="${remaining.amount}" style="width:100px"> ${remaining.unit}<br>
@@ -231,17 +244,18 @@ function initConsumerMap() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(pos => {
         const { latitude, longitude } = pos.coords;
-        const userMarker = L.marker([latitude, longitude], {
-          icon: L.icon({
-            iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png",
-            iconSize: [32, 32],
-            iconAnchor: [16, 32]
-          })
-        }).addTo(consumerMap)
-          .bindPopup("📍 You are here")
-          .openPopup();
+       L.marker([latitude, longitude], {
+  icon: L.divIcon({
+    className: "pulse-marker",
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  })
+})
+.addTo(consumerMap)
+.bindPopup("📍 You are here")
+.openPopup();
 
-        consumerMap.setView([latitude, longitude], 13);
+consumerMap.setView([latitude, longitude], 13);
       }, () => {
         console.warn("Geolocation permission denied.");
       });
@@ -267,7 +281,17 @@ window.claimPartial = async (id, item) => {
     consumerName: consumerName.trim(),
     claimTimestamp: Date.now()
   });
-
+function goBack() {
+  hideAll();
+  document.getElementById("donorHistorySection")?.classList.add("hidden");
+  document.getElementById("consumerHistorySection")?.classList.add("hidden");
+  document.getElementById("ngoLoginSection")?.remove();
+  document.getElementById("ngoDashboard")?.remove();
+  document.getElementById("adminLoginSection")?.remove();
+  document.getElementById("adminSection")?.remove();
+  roleSelect.style.display = "flex";
+}
+window.goBack = goBack;
   const feedback = prompt("✅ Food claimed! Leave any feedback?");
   if (feedback?.trim()) {
     await addDoc(feedbackRef, {
@@ -324,6 +348,11 @@ window.copyLink = (destination) => {
         .then(() => alert("📍 Link copied to clipboard!"))
         .catch(() => prompt("Copy manually:", url));
     });
+    window.copyToClipboard = (text) => {
+  navigator.clipboard.writeText(text).then(() => {
+    alert("📍 Location link copied to clipboard!");
+  });
+};
 };
 // --- Dashboard ---
 function goToDashboard() {
@@ -383,7 +412,7 @@ window.showAdminLogin = showAdminLogin;
 window.verifyAdmin = () => {
   const id = document.getElementById("adminId").value;
   const pwd = document.getElementById("adminPwd").value;
-  if (id === "pheonix" && pwd === "donate bite") {
+  if (id === "ruthik" && pwd === "nikki123") {
     document.getElementById("adminLoginSection").remove();
     showAdminPanel();
   } else {
@@ -523,17 +552,188 @@ window.searchConsumerHistory = () => {
     });
   });
 };
-// --- Show NGO Info Section ---
-window.showNGOInfo = () => {
+// --- Show NGO Login ---
+function showNGOLogin() {
   hideAll();
-  document.getElementById("ngoSection").classList.remove("hidden");
+  roleSelect.style.display = "none";
+
+  const sec = document.createElement("section");
+  sec.id = "ngoLoginSection";
+  sec.className = "form-card";
+  sec.style.maxWidth = "500px";
+  sec.style.margin = "40px auto";
+
+  sec.innerHTML = `
+    <h2 style="text-align:center;font-size:1.8em;margin-bottom:20px;">🏥 NGO Secure Login</h2>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <input id="ngoId" placeholder="Enter your NGO ID" style="padding:10px;font-size:1em;border:1px solid #ccc;border-radius:6px;" />
+      <input type="password" id="ngoPwd" placeholder="Enter Password" style="padding:10px;font-size:1em;border:1px solid #ccc;border-radius:6px;" />
+      <button onclick="verifyNGO()" style="padding:10px;background:#007bff;color:white;border:none;border-radius:6px;font-size:1em;cursor:pointer;">🔐 Login</button>
+      <button onclick="goBack()" style="padding:10px;background:#ccc;color:#333;border:none;border-radius:6px;font-size:1em;cursor:pointer;">⬅️ Back</button>
+      <div id="ngoLoginMsg" style="color:red;margin-top:10px;text-align:center;"></div>
+    </div>
+  `;
+
+  document.querySelector(".container").appendChild(sec);
+}
+
+window.showNGOLogin = showNGOLogin;
+
+window.verifyNGO = () => {
+  const id = document.getElementById("ngoId").value.trim().toLowerCase();
+  const pwd = document.getElementById("ngoPwd").value.trim();
+
+  const validNGOs = {
+    "smile": "ngo123",
+    "hope": "ngo456",
+    "youngisthan foundation": "arun"
+  };
+
+  if (validNGOs[id] === pwd) {
+    localStorage.setItem("loggedNGO", id);
+    document.getElementById("ngoLoginSection")?.remove();
+    const ngo = { name: id, verified: true };
+    showNGODashboardAuth(ngo);
+  } else {
+    document.getElementById("ngoLoginMsg").textContent = "❌ Invalid NGO credentials.";
+  }
 };
 
-window.verifyDonor = async (contact) => {
-  const q = query(donationsRef, where("donorContact", "==", contact));
-  const snap = await getDocs(q);
-  snap.forEach(docSnap => {
-    updateDoc(doc(donationsRef, docSnap.id), { verified: true });
+function showNGODashboardAuth(ngo) {
+  hideAll();
+  document.getElementById("ngoDashboard")?.remove();
+
+  const sec = document.createElement("section");
+  sec.id = "ngoDashboard";
+  sec.className = "form-card";
+  sec.style.padding = "20px";
+
+  sec.innerHTML = `
+    <div style="text-align:center; margin-bottom:20px;">
+      <h2 style="font-size:1.8em;">🏥 ${ngo.name} ${ngo.verified ? "✅" : ""}</h2>
+      <p style="color:#555;">📧 ${ngo.email || "Email not set"}</p>
+    </div>
+
+    <div style="background:#e9f7ef;padding:15px;border-radius:10px;margin-bottom:20px;">
+      <h3 style="color:#28a745;">🌟 Impact Summary</h3>
+      <p id="impactStats">Loading impact data...</p>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <h3 style="color:#007bff;">📦 Available Donations</h3>
+      <ul id="ngoAvailableList" style="list-style:none;padding-left:0;"></ul>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <h3 style="color:#6f42c1;">✅ Your Claimed Donations</h3>
+      <ul id="ngoClaimList" style="list-style:none;padding-left:0;"></ul>
+    </div>
+
+    <div style="margin-bottom:20px;text-align:center;">
+      <a href="https://wa.me/919876543210" target="_blank" style="padding:10px 15px;background:#25d366;color:white;border-radius:6px;text-decoration:none;">💬 Chat with Admin</a>
+    </div>
+
+    <div style="text-align:center;">
+      <button onclick="logoutNGO()" style="padding:10px 20px;background:#dc3545;color:white;border:none;border-radius:6px;font-size:1em;cursor:pointer;">🚪 Logout</button>
+    </div>
+  `;
+
+  document.querySelector(".container").appendChild(sec);
+
+  // 🟢 Load available donations
+  onSnapshot(query(donationsRef, where("status", "==", "approved")), snap => {
+    const list = document.getElementById("ngoAvailableList");
+    list.innerHTML = "";
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      const li = document.createElement("li");
+
+      li.innerHTML = `
+        <div style="background:#fff;padding:15px;margin-bottom:15px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+          <h4>🍱 ${d.foodDetails} — ${d.quantity}</h4>
+          <p>📍 ${d.location}</p>
+          <p>👤 ${d.donorName || "N/A"}</p>
+          <p>📞 ${d.donorPhone ? `<a href="tel:${d.donorPhone}">${d.donorPhone}</a>` : "Not provided"}</p>
+          ${d.donorPhone ? `<p>💬 <a href="https://wa.me/${d.donorPhone.replace(/\D/g, '')}" target="_blank" style="color:#25d366;">Chat with Donor</a></p>` : ""}
+          ${d.imageURL ? `<img src="${d.imageURL}" style="max-height:150px;border-radius:6px;margin-top:10px;">` : ""}
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button onclick="claimByNGO('${docSnap.id}', '${ngo.name}', '${d.foodDetails}', '${d.quantity}', '${d.donorName}', '${d.location}', '${d.donorPhone || ""}', '${d.imageURL || ""}')"
+              style="padding:8px 12px;background:#007bff;color:white;border:none;border-radius:5px;">Claim</button>
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.location)}" target="_blank"
+              style="padding:8px 12px;background:#17a2b8;color:white;border-radius:5px;text-decoration:none;">📍 Directions</a>
+            <button onclick="copyToClipboard('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.location)}')"
+              style="padding:8px 12px;background:#ffc107;color:black;border:none;border-radius:5px;">🔗 Copy Link</button>
+          </div>
+        </div>
+      `;
+      list.appendChild(li);
+    });
   });
-  alert("✅ Donor marked as verified!");
+
+  // 🟢 Load claimed donations
+  let totalClaims = 0;
+  onSnapshot(query(claimsRef, where("consumerName", "==", ngo.name)), snap => {
+    const list = document.getElementById("ngoClaimList");
+    list.innerHTML = "";
+    totalClaims = snap.size;
+
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      const li = document.createElement("li");
+
+      li.innerHTML = `
+        <div style="background:#f8f9fa;padding:15px;margin-bottom:15px;border-radius:10px;">
+          <h4>🍱 ${d.foodDetails} — ${d.quantity}</h4>
+          <p>📍 ${d.location}</p>
+          <p>👤 ${d.donorName || "N/A"}</p>
+          <p>📞 ${d.donorPhone || "N/A"}</p>
+          <p>⏰ ${new Date(d.claimTimestamp).toLocaleString()}</p>
+          ${d.imageURL ? `<img src="${d.imageURL}" style="max-height:150px;border-radius:6px;margin-top:10px;">` : ""}
+        </div>
+      `;
+      list.appendChild(li);
+    });
+
+    // Set impact stats
+    const impactEl = document.getElementById("impactStats");
+    impactEl.innerHTML = `
+      🍱 Total Claims: ${totalClaims}<br>
+      👥 Estimated People Served: ${totalClaims * 5}<br>
+      📅 Member Since: Jan 2024
+    `;
+  });
+}
+
+window.claimByNGO = async (id, ngoId, food, quantity, donor, location, phone, imageURL) => {
+  await addDoc(claimsRef, {
+    foodDetails: food,
+    quantity,
+    donorName: donor,
+    donorPhone: phone,
+    location,
+    imageURL,
+    consumerName: ngoId,
+    claimTimestamp: Date.now()
+  });
+  await deleteDoc(doc(donationsRef, id));
+  alert("✅ Claimed successfully!");
 };
+
+window.logoutNGO = () => {
+  localStorage.removeItem("loggedNGO");
+  document.getElementById("ngoDashboard")?.remove();
+  roleSelect.style.display = "flex";
+};
+
+const savedNGO = localStorage.getItem("loggedNGO");
+if (savedNGO) {
+  const ngo = { name: savedNGO, verified: true };
+  showNGODashboardAuth(ngo);
+}
+
+window.logoutNGO = () => {
+  localStorage.removeItem("loggedNGO");
+  document.getElementById("ngoDashboard")?.remove(); // manually remove it
+  roleSelect.style.display = "flex";
+};
+

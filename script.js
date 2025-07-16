@@ -630,7 +630,7 @@ function showNGODashboardAuth(ngo) {
     </div>
 
     <div style="margin-bottom:20px;text-align:center;">
-      <a href="https://wa.me/919876543210" target="_blank" style="padding:10px 15px;background:#25d366;color:white;border-radius:6px;text-decoration:none;">💬 Chat with Admin</a>
+      <a href="https://wa.me/9346942849" target="_blank" style="padding:10px 15px;background:#25d366;color:white;border-radius:6px;text-decoration:none;">💬 Chat with Admin</a>
     </div>
 
     <div style="text-align:center;">

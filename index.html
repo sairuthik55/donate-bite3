@@ -20,38 +20,37 @@
         <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" />
         <span>Admin</span>
       </div>
+      
       <div class="role-option" onclick="selectRole('donor')">
-        <img src="https://cdn-icons-png.flaticon.com/512/1475/1475996.png" />
+        <img src="https://i.postimg.cc/3JKwJTQ5/food-donation-1.png" />
         <span>Donor</span>
       </div>
       <div class="role-option" onclick="selectRole('consumer')">
-        <img src="https://cdn-icons-png.flaticon.com/512/2920/2920021.png" />
+        <img src="https://i.postimg.cc/Z5Wv4S6Y/consumer.png" />
         <span>Consumer</span>
       </div>
-      <div class="role-option" onclick="goToDashboard()">
-        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828919.png" />
-        <span>Dashboard</span>
-      </div>
       <div class="role-option" onclick="openDonorHistory()">
-        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828961.png" />
+        <img src="https://i.postimg.cc/LXGgJ0RK/history-book.png" />
         <span>Donor History</span>
       </div>
        <div class="role-option" onclick="openConsumerHistory()">
-  <img src="https://cdn-icons-png.flaticon.com/512/2920/2920021.png" />
+  <img src="https://i.postimg.cc/rpPKHYD0/history-book-1.png" />
   <span>Consumer History</span>
 </div>
+ <div class="role-option" onclick="goToDashboard()">
+        <img src="https://i.postimg.cc/65VVPRCV/web-statistics.png" />
+        <span>Dashboard</span>
+      </div>
 
       <div class="role-option" onclick="selectRole('ngo')">
-    <img src="https://cdn-icons-png.flaticon.com/512/684/684831.png" />
+    <img src="https://i.postimg.cc/NGpCy62J/non-profit-organization.png" />
     <span>NGOs & Homes</span>
   </div>
  <div class="role-option" onclick="showNGOLogin()">
-  <img src="https://cdn-icons-png.flaticon.com/512/684/684831.png" />
+  <img src="https://i.postimg.cc/bvZL2Wb3/ngo-3.png" />
   <span>NGO Login</span>
 </div>
 </div>
-    
-
 
     <!-- ✅ Donor Form -->
     <form id="donorForm" class="form-card hidden">
@@ -141,26 +140,6 @@
 
   <button class="back-btn" onclick="goBackToConsumer()">Back to Food List</button>
 </section>
-
-   <!-- ✅ Donor History Section -->
-<section id="donorHistorySection" class="form-card hidden">
-  <h2>📜 Donor History</h2>
-  <p>Search for donations made by a specific donor.</p>
-  <input type="text" id="donorHistoryName" placeholder="Enter Donor Name…" />
-  <button class="submit-btn" onclick="searchDonorHistory()">Search</button>
-  <ul id="donorHistoryList"></ul>
-  <button class="back-btn" onclick="goBack()">Back</button>
-</section>
-
-    <!-- ✅ Consumer History Section -->
-<section id="consumerHistorySection" class="form-card hidden">
-  <h2>📜 Consumer History</h2>
-  <p>Search for food claims by a specific consumer.</p>
-  <input type="text" id="consumerHistoryName" placeholder="Enter Consumer Name…" />
-  <button class="submit-btn" onclick="searchConsumerHistory()">Search</button>
-  <ul id="consumerHistoryList"></ul>
-  <button class="back-btn" onclick="goBack()">Back</button>
-</section>
   <!-- ✅ NGO Info Section -->
 <!-- ✅ NGO Info Section -->
 <section id="ngoSection" class="form-card hidden">
@@ -248,6 +227,13 @@
 
   <button class="back-btn" onclick="goBack()">← Back</button>
 </section>
+<!-- ✅ Splash Intro -->
+<div id="splashLoader">
+  <img src="https://i.postimg.cc/kXJjCqqt/give-love.png" class="splash-logo" alt="Donate Bite Logo" />
+  <p class="splash-text">Feeding hope, one bite at a time…</p>
+  <div class="spinner"></div>
+</div>
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script type="module" src="script.js"></script>

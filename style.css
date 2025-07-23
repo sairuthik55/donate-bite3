@@ -535,3 +535,130 @@ canvas {
 .hidden {
   display: none;
 }
+.role-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 20px;
+  font-size: 16px;
+  background-color: #f3f3f3;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin: 10px;
+}
+
+.role-button:hover {
+  background-color: #e8e8e8;
+}
+
+.role-icon {
+  width: 32px;
+  height: 32px;
+  margin-right: 10px;
+}
+/* ✅ Splash Loader */
+#splashLoader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  flex-direction: column;
+  text-align: center;
+}
+
+.splash-logo {
+  width: 120px;
+  height: 120px;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+#splashLoader p {
+  margin-top: 20px;
+  font-size: 1.2rem;
+  color: #555;
+}
+
+/* Optional animation */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+/* ✅ Splash Loader Styling */
+#splashLoader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f9f9f9, #e8f5e9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.splash-content {
+  text-align: center;
+  animation: fadeIn 1s ease-in;
+}
+
+.splash-logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 20px;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.splash-text {
+  font-size: 1.1rem;
+  color: #444;
+  margin-top: 15px;
+  font-style: italic;
+}
+
+/* 🔄 Spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 5px solid #ccc;
+  border-top: 5px solid #00b894;
+  border-radius: 50%;
+  margin: 10px auto;
+  animation: spin 1s linear infinite;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%   { transform: scale(1); opacity: 1; }
+  50%  { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* 📜 History List Cards */
+#donorHistoryList li, #consumerHistoryList li {
+  background: #f9f9f9;
+  border-left: 5px solid #00b894;
+  padding: 15px 20px;
+  margin-bottom: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}

@@ -212,13 +212,12 @@ function initConsumerMap() {
 
     if (!consumerMap) {
       consumerMap = L.map(mapContainer).setView([20.5937, 78.9629], 5);
-     L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
   attribution: '&copy; OpenStreetMap, &copy; CartoDB',
   subdomains: 'abcd',
   maxZoom: 19
 }).addTo(consumerMap);
     }
-
     // Clear existing markers except user location
     consumerMap.eachLayer(layer => {
       if (layer instanceof L.Marker && !layer.getPopup()?.getContent()?.includes("You are here")) {
@@ -283,16 +282,17 @@ window.claimPartial = async (id, item) => {
     consumerName: consumerName.trim(),
     claimTimestamp: Date.now()
   });
-function goBack() {
+ function goBack() {
   hideAll();
-  document.getElementById("donorHistorySection")?.classList.add("hidden");
-  document.getElementById("consumerHistorySection")?.classList.add("hidden");
+  document.getElementById("donorHistorySection")?.remove();   
+  document.getElementById("consumerHistorySection")?.remove(); 
   document.getElementById("ngoLoginSection")?.remove();
   document.getElementById("ngoDashboard")?.remove();
   document.getElementById("adminLoginSection")?.remove();
   document.getElementById("adminSection")?.remove();
   roleSelect.style.display = "flex";
 }
+
 window.goBack = goBack;
   const feedback = prompt("✅ Food claimed! Leave any feedback?");
   if (feedback?.trim()) {
@@ -319,6 +319,7 @@ window.saveConsumerName = () => {
   roleSelect.style.display = "none";
   showAvailableFood();
 };
+
 // --- Directions ---
 window.getDirections = (destination) => {
   if (!destination) return alert("Location not found");
@@ -477,10 +478,30 @@ window.removeDonation = id => confirm("Remove this donation?") && deleteDoc(doc(
 
 // --- Donor History ---
 window.openDonorHistory = () => {
-  hideAll();
-  document.getElementById("donorHistorySection").classList.remove("hidden");
-  document.getElementById("donorHistoryList").innerHTML = "";
+  const container = document.querySelector(".container");
+  container.innerHTML = ""; // 🧹 Clear all
+
+  const sec = document.createElement("section");
+  sec.id = "donorHistorySection";
+  sec.className = "form-card";
+  sec.innerHTML = `
+    <h2 style="text-align:center;font-size:1.8em;margin-bottom:20px;">📜 Donor History</h2>
+    <p style="text-align:center;color:#555;">Search all donations and claims made by a specific donor.</p>
+
+    <div style="display:flex;gap:10px;justify-content:center;margin:20px 0;">
+      <input type="text" id="donorHistoryName" placeholder="Enter Donor Name…" style="padding:10px;width:60%;border-radius:8px;border:1px solid #ccc;" />
+      <button class="submit-btn" onclick="searchDonorHistory()">🔍 Search</button>
+    </div>
+
+    <ul id="donorHistoryList" style="list-style:none;padding:0;"></ul>
+
+    <div style="text-align:center;margin-top:30px;">
+      <button class="back-btn" onclick="window.location.reload()">⬅️ Back to Home</button>
+    </div>
+  `;
+  container.appendChild(sec);
 };
+
 
 window.searchDonorHistory = () => {
   const name = document.getElementById("donorHistoryName").value.trim().toLowerCase();
@@ -512,6 +533,8 @@ window.searchDonorHistory = () => {
           📍 ${d.location}<br>
           🍳 ${d.dateCooked} • ⏳ ${d.expiryDate}<br>
           ⚖ ${d.quantity}<br>
+           📞 <strong>Phone:</strong> ${d.donorPhone ? `<a href="tel:${d.donorPhone}">${d.donorPhone}</a>` : "Not provided"}</p>
+<span class="status-badge ${d.status}">${d.status.toUpperCase()}</span><br>
           Source: ${d.source} ${d.consumerName ? `→ Claimed by: ${d.consumerName}` : ""}`;
         list.appendChild(li);
       });
@@ -521,9 +544,28 @@ window.searchDonorHistory = () => {
 
 // --- Consumer History ---
 window.openConsumerHistory = () => {
-  hideAll();
-  document.getElementById("consumerHistorySection").classList.remove("hidden");
-  document.getElementById("consumerHistoryList").innerHTML = "";
+  const container = document.querySelector(".container");
+  container.innerHTML = ""; // 🧹 Clear all
+
+  const sec = document.createElement("section");
+  sec.id = "consumerHistorySection";
+  sec.className = "form-card";
+  sec.innerHTML = `
+    <h2 style="text-align:center;font-size:1.8em;margin-bottom:20px;">📜 Consumer History</h2>
+    <p style="text-align:center;color:#555;">Search for food claims made by any consumer.</p>
+
+    <div style="display:flex;gap:10px;justify-content:center;margin:20px 0;">
+      <input type="text" id="consumerHistoryName" placeholder="Enter Consumer Name…" style="padding:10px;width:60%;border-radius:8px;border:1px solid #ccc;" />
+      <button class="submit-btn" onclick="searchConsumerHistory()">🔍 Search</button>
+    </div>
+
+    <ul id="consumerHistoryList" style="list-style:none;padding:0;"></ul>
+
+    <div style="text-align:center;margin-top:30px;">
+      <button class="back-btn" onclick="window.location.reload()">⬅️ Back to Home</button>
+    </div>
+  `;
+  container.appendChild(sec);
 };
 
 window.searchConsumerHistory = () => {
@@ -549,6 +591,8 @@ window.searchConsumerHistory = () => {
         <strong>${d.foodDetails}</strong><br>
         📍 ${d.location}<br>
         Claimed: ${d.quantity}<br>
+         📞 <strong>Phone:</strong> ${d.donorPhone ? `<a href="tel:${d.donorPhone}">${d.donorPhone}</a>` : "Not provided"}</p>
+<span class="status-badge ${d.status}">${d.status.toUpperCase()}</span><br>
         🕒 ${new Date(d.claimTimestamp).toLocaleString()}`;
       list.appendChild(li);
     });
@@ -705,7 +749,6 @@ function showNGODashboardAuth(ngo) {
     `;
   });
 }
-
 window.claimByNGO = async (id, ngoId, food, quantity, donor, location, phone, imageURL) => {
   await addDoc(claimsRef, {
     foodDetails: food,
@@ -726,16 +769,23 @@ window.logoutNGO = () => {
   document.getElementById("ngoDashboard")?.remove();
   roleSelect.style.display = "flex";
 };
-
 const savedNGO = localStorage.getItem("loggedNGO");
 if (savedNGO) {
   const ngo = { name: savedNGO, verified: true };
   showNGODashboardAuth(ngo);
 }
-
 window.logoutNGO = () => {
   localStorage.removeItem("loggedNGO");
   document.getElementById("ngoDashboard")?.remove(); // manually remove it
   roleSelect.style.display = "flex";
 };
+// ✅ Hide splash screen after a delay
+
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    const splash = document.getElementById("splashLoader");
+    if (splash) splash.style.display = "none";
+  }, 4000); // ⏱ show for 4 seconds
+});
+
 

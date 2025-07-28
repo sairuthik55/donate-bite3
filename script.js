@@ -475,7 +475,6 @@ function showAdminPanel() {
 window.approveDonation = id => updateDoc(doc(donationsRef, id), { status: "approved" });
 window.rejectDonation = id => deleteDoc(doc(donationsRef, id));
 window.removeDonation = id => confirm("Remove this donation?") && deleteDoc(doc(donationsRef, id));
-
 // --- Donor History ---
 window.openDonorHistory = () => {
   const container = document.querySelector(".container");
@@ -670,21 +669,40 @@ function showNGODashboardAuth(ngo) {
       <ul id="ngoAvailableList" style="list-style:none;padding-left:0;"></ul>
     </div>
 
-    <div style="margin-bottom:20px;">
-      <h3 style="color:#6f42c1;">✅ Your Claimed Donations</h3>
-      <ul id="ngoClaimList" style="list-style:none;padding-left:0;"></ul>
-    </div>
-
-    <div style="margin-bottom:20px;text-align:center;">
+    <div style="margin-bottom:20px;text-align:verticle;">
       <a href="https://wa.me/9346942849" target="_blank" style="padding:10px 15px;background:#25d366;color:white;border-radius:6px;text-decoration:none;">💬 Chat with Admin</a>
     </div>
 
-    <div style="text-align:center;">
-      <button onclick="logoutNGO()" style="padding:10px 20px;background:#dc3545;color:white;border:none;border-radius:6px;font-size:1em;cursor:pointer;">🚪 Logout</button>
+         <div id="claimedSection" class="hidden" style="margin-bottom:20px;">
+  <h3 style="color:#6f42c1;">✅ Your Claimed Donations</h3>
+  <ul id="ngoClaimList" style="list-style:none;padding-left:0;"></ul>
+</div>
+
+<div style="display:flex;justify-content:flex-end;margin-top:15px;">
+  <button onclick="toggleClaimed()" style="padding:10px 20px;background:#6f42c1;color:white;border:none;border-radius:6px;font-size:1em;cursor:pointer;">
+    📜 View Claimed Donations
+  </button>
+</div>
+
+
+    <div style="text-align:verticle;">
+      <button onclick="logoutNGO()" style="padding:5px 20px;background:#dc3545;color:white;border:none;border-radius:6px;font-size:1em;cursor:pointer;">🚪 Logout</button>
     </div>
+
   `;
 
   document.querySelector(".container").appendChild(sec);
+window.toggleClaimed = () => {
+  const section = document.getElementById("claimedSection");
+  const button = event.target;
+  if (section.classList.contains("hidden")) {
+    section.classList.remove("hidden");
+    button.textContent = "⬅️ Hide Claimed Donations";
+  } else {
+    section.classList.add("hidden");
+    button.textContent = "📜 View Claimed Donations";
+  }
+};
 
   // 🟢 Load available donations
   onSnapshot(query(donationsRef, where("status", "==", "approved")), snap => {
@@ -694,14 +712,16 @@ function showNGODashboardAuth(ngo) {
       const d = docSnap.data();
       const li = document.createElement("li");
 
-      li.innerHTML = `
-        <div style="background:#fff;padding:15px;margin-bottom:15px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
-          <h4>🍱 ${d.foodDetails} — ${d.quantity}</h4>
-          <p>📍 ${d.location}</p>
-          <p>👤 ${d.donorName || "N/A"}</p>
-          <p>📞 ${d.donorPhone ? `<a href="tel:${d.donorPhone}">${d.donorPhone}</a>` : "Not provided"}</p>
-          ${d.donorPhone ? `<p>💬 <a href="https://wa.me/${d.donorPhone.replace(/\D/g, '')}" target="_blank" style="color:#25d366;">Chat with Donor</a></p>` : ""}
-          ${d.imageURL ? `<img src="${d.imageURL}" style="max-height:150px;border-radius:6px;margin-top:10px;">` : ""}
+     li.innerHTML = `
+  <div style="background:#f8f9fa;padding:15px;margin-bottom:15px;border-radius:10px;">
+    <h4>🍱 ${d.foodDetails} — ${d.quantity}</h4>
+    <p>📍 ${d.location}</p>
+    <p>👤 ${d.donorName || "N/A"}</p>
+    <p>📞 ${d.donorPhone || "N/A"}</p>
+    <p>⏰ ${new Date(d.claimTimestamp).toLocaleString()}</p>
+    <p><strong>Status:</strong> <span class="status-badge ${d.status === "Pending Approval" ? "pending" : "approved"}">${d.status}</span></p>
+    ${d.imageURL ? `<img src="${d.imageURL}" style="max-height:150px;border-radius:6px;margin-top:10px;">` : ""}
+  </div>
           <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
             <button onclick="claimByNGO('${docSnap.id}', '${ngo.name}', '${d.foodDetails}', '${d.quantity}', '${d.donorName}', '${d.location}', '${d.donorPhone || ""}', '${d.imageURL || ""}')"
               style="padding:8px 12px;background:#007bff;color:white;border:none;border-radius:5px;">Claim</button>
@@ -749,20 +769,155 @@ function showNGODashboardAuth(ngo) {
     `;
   });
 }
-window.claimByNGO = async (id, ngoId, food, quantity, donor, location, phone, imageURL) => {
-  await addDoc(claimsRef, {
-    foodDetails: food,
-    quantity,
-    donorName: donor,
-    donorPhone: phone,
-    location,
-    imageURL,
-    consumerName: ngoId,
-    claimTimestamp: Date.now()
-  });
-  await deleteDoc(doc(donationsRef, id));
-  alert("✅ Claimed successfully!");
+window.claimByNGO = (id, ngoId, food, quantity, donor, location, phone, imageURL) => {
+  const container = document.querySelector(".container");
+
+  container.innerHTML = `
+    <section class="form-card" style="max-width:500px;margin:auto;">
+      <h2>📦 Confirm Your Claim</h2>
+      <p><strong>Food:</strong> ${food}</p>
+      <p><strong>Quantity:</strong> ${quantity}</p>
+      <p><strong>Location:</strong> ${location}</p>
+      ${imageURL ? `<img src="${imageURL}" style="max-width:100%;border-radius:10px;margin-top:10px;">` : ""}
+      
+      <label>Authorized Person Name</label>
+      <input id="authPerson" placeholder="Enter name" required />
+      
+      <label>Contact Number</label>
+      <input id="authContact" placeholder="Enter phone number" required />
+      
+      <label>Pickup Time</label>
+      <input id="pickupTime" type="time" required />
+      
+      <label>Reason for Claim</label>
+      <textarea id="claimReason" placeholder="Why do you need this food?" required></textarea>
+      
+      <button style="margin-top:15px;background:#00b894;color:white;padding:10px;border:none;border-radius:8px;font-size:1rem;cursor:pointer;"
+        onclick="submitNGOClaim('${id}','${ngoId}','${food}','${quantity}','${donor}','${location}','${phone}','${imageURL}')">
+        ✅ Confirm Claim
+      </button>
+      
+      <button class="back-btn" onclick="window.location.reload()">⬅️ Back</button>
+    </section>
+  `;
 };
+
+window.claimByNGO = (id, ngoId, food, quantity, donor, location, phone, imageURL) => {
+  const container = document.querySelector(".container");
+
+  container.innerHTML = `
+    <section class="form-card claim-confirm-card">
+      <h2>📦 Confirm Your Claim</h2>
+      
+      <div class="claim-summary">
+        <p><strong>Food:</strong> ${food}</p>
+        <p><strong>Quantity:</strong> ${quantity}</p>
+        <p><strong>Location:</strong> ${location}</p>
+        ${imageURL ? `<img src="${imageURL}" class="claim-img">` : ""}
+      </div>
+      
+      <div class="claim-inputs">
+        <label>Authorized Person Name</label>
+        <input id="authPerson" placeholder="Enter name" required />
+        
+        <label>Contact Number</label>
+        <input id="authContact" placeholder="Enter phone number" required />
+        
+        <label>Pickup Time</label>
+        <input id="pickupTime" type="time" required />
+        
+        <label>Reason for Claim</label>
+        <textarea id="claimReason" placeholder="Why do you need this food?" required></textarea>
+      </div>
+      
+      <div class="claim-actions">
+        <button class="submit-btn" onclick="submitNGOClaim('${id}','${ngoId}','${food}','${quantity}','${donor}','${location}','${phone}','${imageURL}')">
+          ✅ Confirm Claim
+        </button>
+        <button class="back-btn" onclick="window.location.reload()">⬅️ Back</button>
+      </div>
+    </section>
+  `;
+};
+
+// ✅ Step 1: Show confirmation form when NGO clicks "Claim"
+window.claimByNGO = (id, ngoId, food, quantity, donor, location, phone, imageURL) => {
+  const container = document.querySelector(".container");
+
+  container.innerHTML = `
+    <section class="form-card claim-confirm-card">
+      <h2>📦 Confirm Your Claim</h2>
+      
+      <div class="claim-summary">
+        <p><strong>Food:</strong> ${food}</p>
+        <p><strong>Quantity:</strong> ${quantity}</p>
+        <p><strong>Location:</strong> ${location}</p>
+        ${imageURL ? `<img src="${imageURL}" class="claim-img">` : ""}
+      </div>
+      
+      <div class="claim-inputs">
+        <label>Authorized Person Name</label>
+        <input id="authPerson" placeholder="Enter name" required />
+        
+        <label>Contact Number</label>
+        <input id="authContact" placeholder="Enter phone number" required />
+        
+        <label>Pickup Time</label>
+        <input id="pickupTime" type="time" required />
+        
+        <label>Reason for Claim</label>
+        <textarea id="claimReason" placeholder="Why do you need this food?" required></textarea>
+      </div>
+      
+      <div class="claim-actions">
+        <button class="submit-btn" onclick="submitNGOClaim('${id}','${ngoId}','${food}','${quantity}','${donor}','${location}','${phone}','${imageURL}')">
+          ✅ Confirm Claim
+        </button>
+        <button class="back-btn" onclick="window.location.reload()">⬅️ Back</button>
+      </div>
+    </section>
+  `;
+};
+
+// ✅ Step 2: Save claim to Firestore when confirmed
+window.submitNGOClaim = async (id, ngoId, food, quantity, donor, location, phone, imageURL) => {
+  const authPerson = document.getElementById("authPerson").value.trim();
+  const authContact = document.getElementById("authContact").value.trim();
+  const pickupTime = document.getElementById("pickupTime").value;
+  const claimReason = document.getElementById("claimReason").value.trim();
+
+  if (!authPerson || !authContact || !pickupTime || !claimReason) {
+    return alert("❌ Please fill in all fields.");
+  }
+
+  try {
+    await addDoc(claimsRef, {
+      foodDetails: food,
+      quantity,
+      donorName: donor,
+      location,
+      donorPhone: phone,
+      ngoId,
+      authPerson,
+      authContact,
+      pickupTime,
+      claimReason,
+      imageURL,
+      status: "Claimed",
+      claimTimestamp: Date.now()
+    });
+
+    // ✅ Remove donation from available list
+    await deleteDoc(doc(donationsRef, id));
+
+    alert("✅ Claim submitted successfully!");
+    window.location.reload();
+  } catch (err) {
+    console.error("❌ Error saving claim:", err);
+    alert("Failed to claim. Check console for details.");
+  }
+};
+
 
 window.logoutNGO = () => {
   localStorage.removeItem("loggedNGO");
@@ -787,5 +942,36 @@ window.addEventListener("load", () => {
     if (splash) splash.style.display = "none";
   }, 4000); // ⏱ show for 4 seconds
 });
+// Animated taglines
+const taglines = [
+  "Feeding hope, one bite at a time…",
+  "Connecting donors with those in need…",
+  "Join the fight against food waste…",
+  "Your kindness makes a difference!"
+];
+let taglineIndex = 0;
+setInterval(() => {
+  const taglineEl = document.getElementById("splashTagline");
+  if (taglineEl) {
+    taglineIndex = (taglineIndex + 1) % taglines.length;
+    taglineEl.textContent = taglines[taglineIndex];
+  }
+}, 2500);
+
+// Hide splash with fade-out
+const splash = document.getElementById("splashLoader");
+function hideSplash() {
+  splash.classList.add("fade-out");
+  setTimeout(() => splash.style.display = "none", 800);
+}
+
+// Skip button
+document.getElementById("skipBtn").addEventListener("click", hideSplash);
+
+// Auto hide after 4 seconds
+window.addEventListener("load", () => {
+  setTimeout(hideSplash, 4000);
+});
+
 
 

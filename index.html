@@ -224,15 +224,30 @@
       </div>
     </div>
   </div>
+  
 
   <button class="back-btn" onclick="goBack()">← Back</button>
 </section>
+
 <!-- ✅ Splash Intro -->
 <div id="splashLoader">
-  <img src="https://i.postimg.cc/kXJjCqqt/give-love.png" class="splash-logo" alt="Donate Bite Logo" />
-  <p class="splash-text">Feeding hope, one bite at a time…</p>
-  <div class="spinner"></div>
+  <video autoplay muted loop id="splashVideo" poster="fallback.jpg">
+    <source src="videos/6894121-uhd_3840_2160_25fps.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <div class="splash-content">
+    <img src="https://i.postimg.cc/kXJjCqqt/give-love.png" class="splash-logo" alt="Donate Bite Logo" />
+    <p id="splashTagline" class="splash-text">Feeding hope, one bite at a time…</p>
+    <div class="loading-dots"><span></span><span></span><span></span></div>
 </div>
+ <!-- ✅ Background Music -->
+  <audio id="splashBgm" autoplay loop>
+    <source src="https://screenapp.io/app/#/shared/InQuC_YRwZ" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>

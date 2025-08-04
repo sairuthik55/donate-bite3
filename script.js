@@ -212,18 +212,12 @@ function initConsumerMap() {
 
     if (!consumerMap) {
       consumerMap = L.map(mapContainer).setView([20.5937, 78.9629], 5);
- L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+ L.tileLayer(	"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
   attribution: '&copy; OpenStreetMap, &copy; CartoDB',
   subdomains: 'abcd',
   maxZoom: 19
 }).addTo(consumerMap);
     }
-    // Clear existing markers except user location
-    consumerMap.eachLayer(layer => {
-      if (layer instanceof L.Marker && !layer.getPopup()?.getContent()?.includes("You are here")) {
-        consumerMap.removeLayer(layer);
-      }
-    });
 
     // Add donation markers
     onSnapshot(query(donationsRef, where("status", "==", "approved")), snap => {
@@ -451,12 +445,17 @@ function showAdminPanel() {
       <span class="status-badge ${d.status}">${d.status.toUpperCase()}</span>
     </div>
     <div class="admin-card-body">
-      <p>📍 <strong>Location:</strong> ${d.location}</p>
-      <p>👤 <strong>Donor:</strong> ${d.donorName} ${d.verified ? "✅" : ""} (${d.donorContact})</p>
-      <p>🍳 <strong>Date Cooked:</strong> ${d.dateCooked} &nbsp; ⏳ <strong>Expiry:</strong> ${d.expiryDate}</p>
-      <p>⚖ <strong>Quantity:</strong> ${d.quantity}</p>
-      ${d.photo ? `<img src="${d.photo}" alt="food" class="admin-img">` : ""}
-    </div>
+         <h4>🍱 ${d.foodDetails} — ${d.quantity}</h4>
+    <p>📍 ${d.location}</p>
+    <p>👤 ${d.donorName || "N/A"}</p>
+    <p>📞 ${d.donorPhone || "N/A"}</p>
+${
+  d.donorPhone
+    ? `<a href="https://wa.me/${d.donorPhone.replace(/\D/g, '')}" target="_blank" class="whatsapp-chat-btn">💬 Chat with Donor</a>`
+    : ""
+}
+
+
     <div class="admin-card-actions">
       ${d.status === "pending"
         ? `<button onclick="approveDonation('${docSnap.id}')">Approve</button>
@@ -669,27 +668,19 @@ function showNGODashboardAuth(ngo) {
       <ul id="ngoAvailableList" style="list-style:none;padding-left:0;"></ul>
     </div>
 
-    <div style="margin-bottom:20px;text-align:verticle;">
-      <a href="https://wa.me/9346942849" target="_blank" style="padding:10px 15px;background:#25d366;color:white;border-radius:6px;text-decoration:none;">💬 Chat with Admin</a>
-    </div>
-
-         <div id="claimedSection" class="hidden" style="margin-bottom:20px;">
-  <h3 style="color:#6f42c1;">✅ Your Claimed Donations</h3>
-  <ul id="ngoClaimList" style="list-style:none;padding-left:0;"></ul>
-</div>
-
-<div style="display:flex;justify-content:flex-end;margin-top:15px;">
-  <button onclick="toggleClaimed()" style="padding:10px 20px;background:#6f42c1;color:white;border:none;border-radius:6px;font-size:1em;cursor:pointer;">
-    📜 View Claimed Donations
+<div class="ngo-actions-bar">
+  <a href="https://wa.me/9346942849" target="_blank" class="circle-btn" title="WhatsApp Admin">
+    <img src="https://i.postimg.cc/VN2Jd0Kd/whatsapp.png" alt="WhatsApp" />
+  </a>
+  <button onclick="toggleClaimed()" class="circle-btn" title="Claimed Donations">
+    <img src="https://cdn-icons-png.flaticon.com/512/3595/3595455.png" alt="History" />
+  </button>
+  <button onclick="logoutNGO()" class="circle-btn" title="Logout">
+    <img src="https://cdn-icons-png.flaticon.com/512/1828/1828490.png" alt="Logout" />
   </button>
 </div>
 
-
-    <div style="text-align:verticle;">
-      <button onclick="logoutNGO()" style="padding:5px 20px;background:#dc3545;color:white;border:none;border-radius:6px;font-size:1em;cursor:pointer;">🚪 Logout</button>
-    </div>
-
-  `;
+`;
 
   document.querySelector(".container").appendChild(sec);
 window.toggleClaimed = () => {
@@ -718,9 +709,15 @@ window.toggleClaimed = () => {
     <p>📍 ${d.location}</p>
     <p>👤 ${d.donorName || "N/A"}</p>
     <p>📞 ${d.donorPhone || "N/A"}</p>
+${
+  d.donorPhone
+    ? `<a href="https://wa.me/${d.donorPhone.replace(/\D/g, '')}" target="_blank" class="whatsapp-chat-btn">💬 Chat with Donor</a>`
+    : ""
+}
+
     <p>⏰ ${new Date(d.claimTimestamp).toLocaleString()}</p>
     <p><strong>Status:</strong> <span class="status-badge ${d.status === "Pending Approval" ? "pending" : "approved"}">${d.status}</span></p>
-    ${d.imageURL ? `<img src="${d.imageURL}" style="max-height:150px;border-radius:6px;margin-top:10px;">` : ""}
+    ${d.photo ? `<img src="${d.photo}" class="clickable-img" onclick="openFullImage('${d.photo}')">` : ""}
   </div>
           <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
             <button onclick="claimByNGO('${docSnap.id}', '${ngo.name}', '${d.foodDetails}', '${d.quantity}', '${d.donorName}', '${d.location}', '${d.donorPhone || ""}', '${d.imageURL || ""}')"
@@ -747,16 +744,50 @@ window.toggleClaimed = () => {
       const d = docSnap.data();
       const li = document.createElement("li");
 
-      li.innerHTML = `
-        <div style="background:#f8f9fa;padding:15px;margin-bottom:15px;border-radius:10px;">
-          <h4>🍱 ${d.foodDetails} — ${d.quantity}</h4>
-          <p>📍 ${d.location}</p>
-          <p>👤 ${d.donorName || "N/A"}</p>
-          <p>📞 ${d.donorPhone || "N/A"}</p>
-          <p>⏰ ${new Date(d.claimTimestamp).toLocaleString()}</p>
-          ${d.imageURL ? `<img src="${d.imageURL}" style="max-height:150px;border-radius:6px;margin-top:10px;">` : ""}
-        </div>
-      `;
+   let claims = [];
+snap.forEach(docSnap => claims.push(docSnap.data()));
+
+// Sort newest first
+claims.sort((a, b) => b.claimTimestamp - a.claimTimestamp);
+
+const list = document.getElementById("ngoClaimList");
+list.innerHTML = "";
+
+claims.forEach(d => {
+  const li = document.createElement("li");
+  li.innerHTML = `
+    <div style="background:#f8f9fa;padding:15px;margin-bottom:15px;border-radius:10px;">
+      <h4>🍱 ${d.foodDetails} — ${d.quantity}</h4>
+      <p>📍 ${d.location}</p>
+      <p>👤 Donor: ${d.donorName || "N/A"}</p>
+      <p>📞 ${d.donorPhone || "N/A"}</p>
+${
+  d.donorPhone
+    ? `<a href="https://wa.me/${d.donorPhone.replace(/\D/g, '')}" target="_blank" class="whatsapp-chat-btn">💬 Chat with Donor</a>`
+    : ""
+}
+
+      <p>🕒 ${new Date(d.claimTimestamp).toLocaleString()}</p>
+    </div>`;
+  list.appendChild(li);
+});
+// 🔍 Fullscreen image viewer for NGO section
+window.openFullImage = (url) => {
+  document.getElementById("modalImage").src = url;
+  document.getElementById("imageModal").classList.remove("hidden");
+};
+
+window.closeFullImage = () => {
+  document.getElementById("imageModal").classList.add("hidden");
+};
+
+// 🟢 Update Impact Summary
+const impactEl = document.getElementById("impactStats");
+impactEl.innerHTML = `
+  🍱 Total Claims: ${claims.length}<br>
+  👥 Estimated People Served: ${claims.length * 5}<br>
+  📅 Member Since: Jan 2024
+`;
       list.appendChild(li);
     });
 

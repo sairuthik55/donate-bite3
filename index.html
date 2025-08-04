@@ -21,10 +21,11 @@
         <span>Admin</span>
       </div>
       
-      <div class="role-option" onclick="selectRole('donor')">
-        <img src="https://i.postimg.cc/3JKwJTQ5/food-donation-1.png" />
-        <span>Donor</span>
-      </div>
+     <div class="role-option" onclick="selectRole('donor')">
+  <img src="https://i.postimg.cc/3JKwJTQ5/food-donation-1.png" />
+  <span>Donate Food</span>
+</div>
+
       <div class="role-option" onclick="selectRole('consumer')">
         <img src="https://i.postimg.cc/Z5Wv4S6Y/consumer.png" />
         <span>Consumer</span>
@@ -228,6 +229,11 @@
 
   <button class="back-btn" onclick="goBack()">← Back</button>
 </section>
+<!-- ✅ Fullscreen Image Modal -->
+<div id="imageModal" class="image-modal hidden" onclick="closeFullImage()">
+  <img id="modalImage" />
+  <span class="close-btn" onclick="closeFullImage()">❌</span>
+</div>
 
 <!-- ✅ Splash Intro -->
 <div id="splashLoader">
@@ -247,6 +253,11 @@
     Your browser does not support the audio element.
   </audio>
 
+<!-- Fullscreen Image Modal -->
+<div id="imageModal" class="image-modal hidden" onclick="closeFullImage()">
+  <img id="modalImage" />
+  <span class="close-btn" onclick="closeFullImage()">❌</span>
+</div>
 
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -254,3 +265,4 @@
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
